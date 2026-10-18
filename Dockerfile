@@ -1,51 +1,39 @@
 # =============================================================================
 # Our Little Space — Production Dockerfile for Render
+# Django + Daphne backend only
+# Frontend is deployed separately as a Render Static Site.
 # =============================================================================
-# Stage 1: Build the Vite frontend
-# =============================================================================
-FROM node:24-alpine AS frontend-build
-WORKDIR /app/frontend
 
-# Install frontend dependencies
-COPY frontend/package.json frontend/package-lock.json* ./
-RUN npm ci
+FROM python:3.12-slim
 
-# Copy frontend source and build for production
-COPY frontend/ .
-RUN npm run build
+ENV PYTHONDONTWRITEBYTECODE=1 
+    PYTHONUNBUFFERED=1 
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# =============================================================================
-# Stage 2: Run the Django backend + serve frontend
-# =============================================================================
-FROM python:3.13-alpine AS backend
 WORKDIR /app/backend
 
-# Install system dependencies needed by Python packages (psycopg, Pillow)
-RUN apk add --no-cache \
-    gcc \
-    musl-dev \
-    libffi-dev \
-    jpeg-dev \
-    zlib-dev \
-    && rm -rf /var/cache/apk/*
+# System dependencies for PostgreSQL drivers and Pillow
+RUN apt-get update 
+    && apt-get install -y --no-install-recommends 
+        build-essential 
+        libpq-dev 
+        libjpeg62-turbo-dev 
+        zlib1g-dev 
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
-COPY backend/requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip \
+COPY backend/requirements.txt ./requirements.txt
+
+RUN pip install --no-cache-dir --upgrade pip 
     && pip install --no-cache-dir -r requirements.txt
 
-# Copy backend source code
-COPY backend/ .
+# Copy Django project
+COPY backend/ ./
 
-# Copy the built frontend from Stage 1 into the backend static directory
-# WhiteNoise will serve these assets at / (frontend) and /static/ (Django admin)
-COPY --from=frontend-build /app/frontend/dist ./frontend_dist
+# Collect Django static files during the image build
+RUN python manage.py collectstatic --noinput
 
-# Collect Django static files (admin, REST framework, WhiteNoise)
-RUN python manage.py collectstatic --noinput --clear
-
-# Render injects $PORT automatically. Daphne listens on that port.
+# Render supplies PORT automatically
 EXPOSE 8000
 
-# Entrypoint: run migrations, then start Daphne ASGI server
-CMD ["sh", "/app/backend/start.sh"]
+CMD ["sh", "start.sh"]
