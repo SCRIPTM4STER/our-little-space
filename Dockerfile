@@ -7,7 +7,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
-WORKDIR /app/backend
+WORKDIR /backend
 
 # Install system dependencies
 RUN apt-get update \
@@ -30,4 +30,4 @@ COPY backend/ ./
 EXPOSE 8000
 
 # Entrypoint: run migrations, collect static files, start Daphne ASGI server
-CMD ["sh", "/app/backend/start.sh"]
+CMD ["sh", "start.sh"]
