@@ -1,15 +1,18 @@
 # Render Blueprint — Our Little Space
 #
 # Deploys a single Docker web service that runs the Django backend (Daphne ASGI)
-# and serves the Vite-built React frontend via WhiteNoise, plus a managed
-# Render PostgreSQL database and a persistent disk for media uploads.
+# and serves the Vite-built React frontend via WhiteNoise, plus a persistent disk
+# for media uploads. The database is your existing Supabase PostgreSQL instance
+# (connection details set manually as POSTGRES_* env vars).
 #
 # How to use:
 #   1. Push this repo to GitHub.
 #   2. In Render, go to "Blueprints" → "Connect a repository" and select this repo.
-#   3. Render will detect render.yaml and create the web service + database.
-#   4. Set the remaining secret/host variables in the Render dashboard
-#      (SECRET_KEY is auto-generated; ALLOWED_HOSTS/CORS/CSRF need your domain).
+#   3. Render will detect render.yaml and create the web service + persistent disk.
+#   4. In the Render dashboard → Environment tab, set the POSTGRES_* variables
+#      from your Supabase database connection info.
+#   5. Set the remaining secret/host variables (SECRET_KEY is auto-generated;
+#      ALLOWED_HOSTS/CORS/CSRF need your domain).
 #
 services:
   - type: web
@@ -33,26 +36,18 @@ services:
         value: False
       - key: USE_POSTGRESQL
         value: True
+      # PostgreSQL connection details come from your existing Supabase database.
+      # Set these manually in the Render dashboard → Environment tab:
       - key: POSTGRES_DB
-        fromDatabase:
-          name: our-little-space-db
-          property: databaseName
+        value: your-supabase-db-name
       - key: POSTGRES_USER
-        fromDatabase:
-          name: our-little-space-db
-          property: username
+        value: your-supabase-db-user
       - key: POSTGRES_PASSWORD
-        fromDatabase:
-          name: our-little-space-db
-          property: password
+        value: your-supabase-db-password
       - key: POSTGRES_HOST
-        fromDatabase:
-          name: our-little-space-db
-          property: host
+        value: your-supabase-db-host.supabase.co
       - key: POSTGRES_PORT
-        fromDatabase:
-          name: our-little-space-db
-          property: port
+        value: 5432
       - key: POSTGRES_SSLMODE
         value: require
       - key: ALLOWED_HOSTS
@@ -81,9 +76,3 @@ services:
     disk:
       name: media-disk
       mountPath: /app/backend/media
-databases:
-  - name: our-little-space-db
-    plan: starter
-    region: oregon
-    databaseName: ourlittlespace
-    user: postgres
