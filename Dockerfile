@@ -7,7 +7,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
-WORKDIR /backend
+WORKDIR /app/backend
 
 # Install system dependencies
 RUN apt-get update \
@@ -26,6 +26,10 @@ RUN pip install --no-cache-dir --upgrade pip \
 
 # Copy Django backend only
 COPY backend/ ./
+
+# Copy entrypoint script
+COPY start.sh ./start.sh
+RUN chmod +x start.sh
 
 EXPOSE 8000
 

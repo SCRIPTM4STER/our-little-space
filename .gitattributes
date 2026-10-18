@@ -1,0 +1,5 @@
+# Force LF line endings for files executed inside Linux containers.
+# Prevents Windows CRLF from breaking shell scripts on Render.
+start.sh text eol=lf
+Dockerfile text eol=lf
+*.sh text eol=lf
