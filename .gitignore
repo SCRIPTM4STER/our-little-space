@@ -13,6 +13,7 @@ __pycache__/
 *.sqlite3
 *.sqlite3-journal
 backend/media/
+!backend/media/.gitkeep
 backend/staticfiles/
 
 # Frontend dependencies and build output

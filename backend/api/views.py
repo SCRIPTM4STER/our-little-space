@@ -822,3 +822,19 @@ class ProfileView(APIView):
 		serializer.is_valid(raise_exception=True)
 		serializer.save()
 		return Response({'data': serializer.data})
+
+
+def frontend_index(request):
+    """Serve the React SPA index.html for all non-API, non-admin routes.
+
+    WhiteNoise handles /static/ and /media/ before this view is reached.
+    This catch-all enables React Router client-side navigation on refresh.
+    """
+    from django.conf import settings
+    from django.http import FileResponse, Http404
+    import os
+
+    index_path = os.path.join(settings.STATICFILES_DIRS[0], 'index.html')
+    if os.path.exists(index_path):
+        return FileResponse(open(index_path, 'rb'))
+    raise Http404('Frontend not built. Run `npm run build` in the frontend directory.')

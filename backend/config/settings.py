@@ -86,15 +86,47 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
+#
+# Database selection is controlled by DB_ENGINE:
+#   - "sqlite"  -> local development (default)
+#   - "postgres" -> production via Railway PostgreSQL
+#
+# When DB_ENGINE=postgres, individual connection fields are read from the
+# environment. This avoids embedding secrets in a single DATABASE_URL string.
 
-DATABASES = {
-    'default': env.db_url('DATABASE_URL', default='sqlite:///db.sqlite3'),
-}
+USE_POSTGRESQL = env.bool('USE_POSTGRESQL', default=False)
 
-if DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
-    database_name = Path(DATABASES['default']['NAME'])
-    if str(database_name) != ':memory:' and not database_name.is_absolute():
-        DATABASES['default']['NAME'] = BASE_DIR / database_name
+if USE_POSTGRESQL:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': env('POSTGRES_DB', default='railway'),
+            'USER': env('POSTGRES_USER', default='postgres'),
+            'PASSWORD': env('POSTGRES_PASSWORD', default=''),
+            'HOST': env('POSTGRES_HOST', default='localhost'),
+            'PORT': env.int('POSTGRES_PORT', default=5432),
+            'CONN_MAX_AGE': 600,
+            'OPTIONS': {
+                'sslmode': env('POSTGRES_SSLMODE', default='prefer'),
+            },
+        },
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / env('SQLITE_DB_NAME', default='db.sqlite3'),
+        },
+    }
+
+# Validate production database settings
+if USE_POSTGRESQL and not DEBUG:
+    required_pg_vars = ['POSTGRES_DB', 'POSTGRES_USER', 'POSTGRES_PASSWORD', 'POSTGRES_HOST']
+    missing = [v for v in required_pg_vars if not env.str(v, default='')]
+    if missing:
+        raise ImproperlyConfigured(
+            f'Production PostgreSQL requires these environment variables: {", ".join(missing)}'
+        )
 
 
 # Password validation
@@ -204,6 +236,20 @@ CHANNEL_LAYERS = {
         'BACKEND': 'channels.layers.InMemoryChannelLayer',
     },
 }
+
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# WhiteNoise: serve Django static files and the built React frontend
+STATICFILES_DIRS = [
+    BASE_DIR / 'frontend_dist',
+]
+WHITENOISE_MAX_AGE = 31536000  # 1 year cache for static assets
+WHITENOISE_SKIP_COMPRESS_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg']
+
+# Media files (user avatar uploads) — persisted via Railway volume
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [

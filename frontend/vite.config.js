@@ -5,6 +5,10 @@ import { defineConfig } from 'vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+  },
   server: {
     host: '0.0.0.0',
     allowedHosts: ['w9460k8k-5173.inc1.devtunnels.ms'],
