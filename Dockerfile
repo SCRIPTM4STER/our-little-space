@@ -1,8 +1,4 @@
-# =============================================================================
-# Our Little Space — Production Dockerfile for Render
-# Django + Daphne backend only
-# Frontend is deployed separately as a Render Static Site.
-# =============================================================================
+# Our Little Space — Django + Daphne backend only
 
 FROM python:3.12-slim
 
@@ -12,7 +8,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 
 WORKDIR /app/backend
 
-# System dependencies for PostgreSQL drivers and Pillow
+# Install system dependencies
 RUN apt-get update 
     && apt-get install -y --no-install-recommends 
         build-essential 
@@ -27,13 +23,12 @@ COPY backend/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir --upgrade pip 
     && pip install --no-cache-dir -r requirements.txt
 
-# Copy Django project
+# Copy Django backend only
 COPY backend/ ./
 
-# Collect Django static files during the image build
+# Collect Django static files
 RUN python manage.py collectstatic --noinput
 
-# Render supplies PORT automatically
 EXPOSE 8000
 
 CMD ["sh", "start.sh"]
