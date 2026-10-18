@@ -1,5 +1,5 @@
 # =============================================================================
-# Our Little Space — Production Dockerfile for Railway
+# Our Little Space — Production Dockerfile for Render
 # =============================================================================
 # Stage 1: Build the Vite frontend
 # =============================================================================
@@ -44,7 +44,7 @@ COPY --from=frontend-build /app/frontend/dist ./frontend_dist
 # Collect Django static files (admin, REST framework, WhiteNoise)
 RUN python manage.py collectstatic --noinput --clear
 
-# Railway injects $PORT automatically. Daphne listens on that port.
+# Render injects $PORT automatically. Daphne listens on that port.
 EXPOSE 8000
 
 # Entrypoint: run migrations, then start Daphne ASGI server

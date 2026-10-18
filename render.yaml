@@ -1,0 +1,89 @@
+# Render Blueprint — Our Little Space
+#
+# Deploys a single Docker web service that runs the Django backend (Daphne ASGI)
+# and serves the Vite-built React frontend via WhiteNoise, plus a managed
+# Render PostgreSQL database and a persistent disk for media uploads.
+#
+# How to use:
+#   1. Push this repo to GitHub.
+#   2. In Render, go to "Blueprints" → "Connect a repository" and select this repo.
+#   3. Render will detect render.yaml and create the web service + database.
+#   4. Set the remaining secret/host variables in the Render dashboard
+#      (SECRET_KEY is auto-generated; ALLOWED_HOSTS/CORS/CSRF need your domain).
+#
+services:
+  - type: web
+    name: our-little-space
+    env: docker
+    repo: https://github.com/SCRIPTM4STER/our-little-space.git
+    plan: starter
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: ./
+    # Render injects $PORT automatically; start.sh listens on ${PORT:-8000}.
+    startCommand: sh /app/backend/start.sh
+    healthCheckPath: /api/health/
+    healthCheckTimeout: 100
+    restartPolicy: on_failure
+    autoDeploy: true
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: False
+      - key: USE_POSTGRESQL
+        value: True
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: our-little-space-db
+          property: databaseName
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: our-little-space-db
+          property: username
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: our-little-space-db
+          property: password
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: our-little-space-db
+          property: host
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: our-little-space-db
+          property: port
+      - key: POSTGRES_SSLMODE
+        value: require
+      - key: ALLOWED_HOSTS
+        value: our-little-space.onrender.com
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://our-little-space.onrender.com
+      - key: CSRF_TRUSTED_ORIGINS
+        value: https://our-little-space.onrender.com
+      - key: SECURE_SSL_REDIRECT
+        value: True
+      - key: SESSION_COOKIE_SECURE
+        value: True
+      - key: CSRF_COOKIE_SECURE
+        value: True
+      - key: SECURE_HSTS_SECONDS
+        value: 31536000
+      - key: SECURE_HSTS_INCLUDE_SUBDOMAINS
+        value: True
+      - key: SECURE_HSTS_PRELOAD
+        value: True
+      - key: SECURE_PROXY_SSL_HEADER
+        value: HTTP_X_FORWARDED_PROTO,https
+      - key: LOG_LEVEL
+        value: INFO
+    # Persistent disk for avatar/media uploads. Data survives redeploys.
+    disk:
+      name: media-disk
+      mountPath: /app/backend/media
+databases:
+  - name: our-little-space-db
+    plan: starter
+    region: oregon
+    databaseName: ourlittlespace
+    user: postgres

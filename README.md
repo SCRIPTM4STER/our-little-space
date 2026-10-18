@@ -4,26 +4,24 @@ A mobile-friendly Django and React application for two or more people to hang ou
 
 ## Production Deployment
 
-This project is configured for deployment on [Railway](https://railway.app). See **[DEPLOYMENT.md](DEPLOYMENT.md)** for step-by-step instructions.
+This project is configured for deployment on [Render](https://render.com). See **[DEPLOYMENT.md](DEPLOYMENT.md)** for step-by-step instructions.
 
 ### Deployment files included
 
 | File | Purpose |
 |------|---------|
 | `Dockerfile` | Multi-stage Docker build (Vite frontend + Django backend) |
-| `railway.json` | Railway deployment configuration |
+| `render.yaml` | Render blueprint (web service, PostgreSQL, disk, health check) |
 | `docker-compose.yml` | Local development parity |
 | `start.sh` | Container entrypoint (migrate + collectstatic + Daphne) |
 | `DEPLOYMENT.md` | Step-by-step deployment guide |
 
-### Quick start for Railway
+### Quick start for Render
 
-1. Push code to GitHub and connect to Railway
-2. Add a PostgreSQL database service
-3. Link `DATABASE_URL` from PostgreSQL to your backend service
-4. Set environment variables per `backend/.env.example` and DEPLOYMENT.md
-5. Add a persistent volume mounted at `/app/backend/media`
-6. Deploy — `start.sh` runs migrations and starts Daphne automatically
+1. Push code to GitHub and connect to Render Blueprints
+2. Apply the `render.yaml` blueprint (web service + PostgreSQL + disk)
+3. Set environment variables per `backend/.env.example` and DEPLOYMENT.md
+4. Deploy — `start.sh` runs migrations and starts Daphne automatically
 
 ## Project Status
 
