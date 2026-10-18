@@ -89,7 +89,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 #
 # Database selection is controlled by DB_ENGINE:
 #   - "sqlite"  -> local development (default)
-#   - "postgres" -> production via Railway PostgreSQL
+#   - "postgres" -> production via Render PostgreSQL
 #
 # When DB_ENGINE=postgres, individual connection fields are read from the
 # environment. This avoids embedding secrets in a single DATABASE_URL string.
@@ -247,7 +247,7 @@ STATICFILES_DIRS = [
 WHITENOISE_MAX_AGE = 31536000  # 1 year cache for static assets
 WHITENOISE_SKIP_COMPRESS_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg']
 
-# Media files (user avatar uploads) — persisted via Railway volume
+# Media files (user avatar uploads) — persisted via Render disk
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
