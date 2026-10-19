@@ -2752,3 +2752,39 @@ footer span {
     grid-template-columns: 1fr;
   }
 }
+
+
+
+/* warnings and other tags*/
+
+.warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background-color: #fffbe6; /* Light yellow background */
+  border: 1px solid #ffe58f;
+  border-left: 5px solid #faad14; /* Amber accent bar */
+  border-radius: 8px; /* Fixed border-radius (px) is better than % */
+  padding: 16px;
+  max-width: 450px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  font-family: system-ui, -apple-system, sans-serif;
+  margin: 20px;
+}
+
+.warning-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.warning-title {
+  font-weight: 700;
+  color: #d46b08;
+  margin-bottom: 4px;
+}
+
+.warning-text {
+  color: #5c3c00;
+  font-size: 14px;
+  line-height: 1.5;
+}

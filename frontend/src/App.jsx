@@ -3,6 +3,13 @@ import './App.css'
 function App() {
   return (
     <main className="page">
+      <div className='warning'>
+        <div class="warning-icon">⚠️</div>
+          <div class="warning-content">
+           <div class="warning-title">Note</div>
+          <p className="warning-text">This is a demo version. If you find any bugs or encounter any issues please report to: riyadhg002@gmail.com</p> 
+        </div>
+      </div>
 
       {/* Hero */}
       <section id="home" className="hero">
