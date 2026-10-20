@@ -21,8 +21,29 @@ from django.urls import include, path, re_path
 
 from api.views import frontend_index
 
+
+from pathlib import Path
+from django.conf import settings
+from django.http import JsonResponse
+
+def media_diagnostic(request):
+    p = (
+        Path(settings.MEDIA_ROOT)
+        / "profile-avatars"
+        / "Midnight_Music_Dreams_Avatar.png"
+    )
+
+    return JsonResponse({
+        "media_root": str(settings.MEDIA_ROOT),
+        "file_exists": p.exists(),
+        "file_path": str(p),
+    })
+
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path("debug-media-check/", media_diagnostic),
     path('api/', include('api.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
@@ -30,3 +51,5 @@ urlpatterns = [
 urlpatterns += [
     re_path(r'^(?!api|admin|static|media).*$', frontend_index),
 ]
+
+
