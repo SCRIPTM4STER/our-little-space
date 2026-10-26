@@ -33,7 +33,7 @@ function App() {
           </p>
 
           <div className="hero-buttons">
-            <a href="#watch" className="button button-yellow">
+            <a href="rooms" className="button button-yellow">
               Let's Watch →
             </a>
 

@@ -499,7 +499,7 @@ class ConversationMessageView(APIView):
 				object_id__in=[str(message_id) for message_id in unread_ids],
 				read_at__isnull=True,
 			).update(read_at=read_at)
-		messages = conversation.messages.select_related('sender__profile')
+		messages = conversation.messages.filter(deleted_at__isnull=True).select_related('sender__profile')
 		return Response({'data': DirectMessageSerializer(message_page(messages, request), many=True).data})
 
 	def post(self, request, conversation_id):
@@ -521,6 +521,17 @@ class ConversationMessageView(APIView):
 		payload = DirectMessageSerializer(message).data
 		broadcast_chat_message(f'conversation_{conversation.pk}', payload)
 		return Response({'data': payload}, status=status.HTTP_201_CREATED)
+
+	def delete(self, request, conversation_id, message_id):
+		conversation = get_object_or_404(Conversation, pk=conversation_id)
+		if not conversation.is_participant(request.user):
+			raise Http404('You do not have access to this conversation.')
+		message = get_object_or_404(DirectMessage, pk=message_id, conversation=conversation)
+		if message.sender != request.user:
+			raise PermissionDenied('You can only delete your own messages.')
+		message.deleted_at = timezone.now()
+		message.save(update_fields=['deleted_at'])
+		return Response({'data': {'deleted': True}})
 
 
 class RoomView(APIView):
@@ -717,6 +728,16 @@ class RoomMessageView(APIView):
 		payload = RoomMessageSerializer(message).data
 		broadcast_chat_message(f'room_{room.pk}', payload)
 		return Response({'data': payload}, status=status.HTTP_201_CREATED)
+	def delete(self, request, room_id, msg_id):
+		room = self.get_room_for_member(room_id, request.user)
+		message = get_object_or_404(RoomMessage, id=msg_id, room=room)
+		if message.sender != request.user:
+			raise PermissionDenied('You can only delete your own messages.')
+		message.delete()
+		return Response({'data': {'deleted': True}})
+
+
+
 
 
 class RoomWatchView(APIView):

@@ -230,6 +230,7 @@ class DirectMessage(models.Model):
 	content = models.TextField()
 	created_at = models.DateTimeField(auto_now_add=True)
 	read_at = models.DateTimeField(blank=True, null=True)
+	deleted_at = models.DateTimeField(blank=True, null=True)
 
 	class Meta:
 		ordering = ['created_at']
@@ -264,10 +265,14 @@ class RoomMembership(models.Model):
 
 
 class RoomMessage(models.Model):
+	id =  models.UUIDField(
+      primary_key=True, default=uuid.uuid4, editable=False, unique=True, blank=True
+  ) 
 	room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='messages')
 	sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_room_messages')
 	content = models.TextField()
 	created_at = models.DateTimeField(auto_now_add=True)
+	deleated_at = models.DateTimeField(blank=True, null=True)
 
 	class Meta:
 		ordering = ['created_at']

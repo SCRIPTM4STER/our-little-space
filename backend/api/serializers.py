@@ -149,7 +149,7 @@ class DirectMessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DirectMessage
-        fields = ('id', 'sender', 'content', 'created_at', 'read_at')
+        fields = ('id', 'sender', 'content', 'created_at', 'read_at', 'deleted_at')
 
     def get_sender(self, obj):
         return PublicProfileSerializer(obj.sender.profile).data
@@ -182,7 +182,7 @@ class RoomMessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RoomMessage
-        fields = ('id', 'sender', 'content', 'created_at')
+        fields = ('id', 'sender', 'content', 'created_at', 'deleated_at')
 
     def get_sender(self, obj):
         return PublicProfileSerializer(obj.sender.profile).data

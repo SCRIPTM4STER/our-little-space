@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { apiGet, apiGetPage, apiPost, getWebSocketUrl } from '../api/client'
+import { apiGet, apiGetPage, apiPost, apiDelete, getWebSocketUrl } from '../api/client'
 import { useAuth } from '../auth/useAuth'
 import UserAvatar from '../assets/components/UserAvatar'
 import { mergeMessages, MESSAGE_HISTORY_PAGE_SIZE, MESSAGE_POLL_INTERVAL_MS } from '../utils/messages'
@@ -22,6 +22,7 @@ function Messages() {
   const [isSendingMessage, setIsSendingMessage] = useState(false)
   const [messageDraft, setMessageDraft] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
+  const [isDeletingMessageId, setIsDeletingMessageId] = useState(null)
   const messagesRef = useRef([])
   const chatWindowRef = useRef(null)
   const previousScrollPositionRef = useRef(null)
@@ -257,6 +258,28 @@ function Messages() {
     }
   }
 
+  async function deleteMessage(messageId) {
+    if (!selectedConversationId || isDeletingMessageId) return
+    if (!window.confirm('Delete this message?')) return
+    try {
+      setIsDeletingMessageId(messageId)
+      setErrorMessage('')
+      await apiDelete(`/conversations/${selectedConversationId}/messages/${messageId}/`)
+      setMessages((current) => current.filter((message) => message.id !== messageId))
+      messagesRef.current = messagesRef.current.filter((message) => message.id !== messageId)
+      setConversations((current) => current.map((conversation) => (
+        conversation.id === selectedConversationId
+          ? { ...conversation, last_message: undefined }
+          : conversation
+      )))
+      await loadMessagesData()
+    } catch (error) {
+      setErrorMessage(error.message)
+    } finally {
+      setIsDeletingMessageId(null)
+    }
+  }
+
   const selectedConversation = conversations.find((conversation) => conversation.id === selectedConversationId)
 
   return (
@@ -294,13 +317,13 @@ function Messages() {
                 {hasOlderMessages && <button type="button" className="button button-yellow" onClick={loadOlderMessages} disabled={isLoadingOlderMessages}>{isLoadingOlderMessages ? 'Loading earlier messages...' : 'Load earlier messages'}</button>}
                 {isLoadingMessages ? <p className="muted" role="status">Loading conversation...</p> : messages.length === 0 ? <p className="muted">Start the conversation.</p> : messages.map((message) => {
                   const isOwnMessage = message.sender?.public_id === user.public_id
-                  return <div key={message.id} className={`chat-message ${isOwnMessage ? 'mine' : ''}`}><div className="chat-message-author"><UserAvatar profile={isOwnMessage ? profile : message.sender} /><strong>{isOwnMessage ? 'You' : (message.sender?.display_name || message.sender?.username)}</strong></div><p>{message.content}</p></div>
+                  return <div key={message.id} className={`chat-message ${isOwnMessage ? 'mine' : ''}`}><div className="chat-message-author"><UserAvatar profile={isOwnMessage ? profile : message.sender} /><strong>{isOwnMessage ? 'You' : (message.sender?.display_name || message.sender?.username)}</strong></div><p>{message.content}</p>{isOwnMessage && <button type="button" className="delete-button" onClick={() => deleteMessage(message.id)} disabled={isDeletingMessageId === message.id}>{isDeletingMessageId === message.id ? 'Deleting...' : 'Delete'}</button>}</div>
                 })}
-              </div>
+              </div> 
               <form onSubmit={sendMessage} className="message-form">
                 <label className="sr-only" htmlFor="direct-message">Direct message</label>
                 <input id="direct-message" value={messageDraft} onChange={(event) => setMessageDraft(event.target.value)} placeholder="Send a private message" />
-                <button type="submit" className="button button-pink" disabled={isSendingMessage}>{isSendingMessage ? 'Sending...' : 'Send'}</button>
+                <button type="submit" className="button button-yellow" disabled={isSendingMessage}>{isSendingMessage ? 'Sending...' : 'Send'}</button>
               </form>
             </div>
           )}
