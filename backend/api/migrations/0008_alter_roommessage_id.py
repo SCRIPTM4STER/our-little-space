@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
             # get uuid4() from the model default.
             database_operations=[
                 migrations.RunSQL(
-                    "ALTER TABLE api_roommessage ALTER COLUMN id DROP DEFAULT;"
+                    "ALTER TABLE api_roommessage ALTER COLUMN id DROP IDENTITY;"
                     " ALTER TABLE api_roommessage ALTER COLUMN id TYPE uuid USING id::text::uuid;",
                     migrations.RunSQL.noop,  # reversing a PK int->uuid change is data-lossy
                 ),
