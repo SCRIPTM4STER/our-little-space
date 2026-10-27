@@ -14,13 +14,16 @@ class Migration(migrations.Migration):
     operations = [
         SeparateDatabaseAndState(
             # PostgreSQL cannot cast bigint -> uuid directly, so we cast
-            # through text: id::text::uuid. Existing integer ids become
-            # deterministic UUIDs (e.g. 1 -> 00000000-...-0001); new rows
+            # through text. id::text::uuid fails because "1" is not valid
+            # UUID syntax; instead we pad the integer to 32 hex digits,
+            # which PostgreSQL accepts as a UUID (no hyphens needed).
+            # Existing integer ids become deterministic UUIDs
+            # (e.g. 1 -> 000000000000000000000000000001); new rows
             # get uuid4() from the model default.
             database_operations=[
                 migrations.RunSQL(
                     "ALTER TABLE api_roommessage ALTER COLUMN id DROP IDENTITY;"
-                    " ALTER TABLE api_roommessage ALTER COLUMN id TYPE uuid USING id::text::uuid;",
+                    " ALTER TABLE api_roommessage ALTER COLUMN id TYPE uuid USING lpad(id::text, 32, '0')::uuid;",
                     migrations.RunSQL.noop,  # reversing a PK int->uuid change is data-lossy
                 ),
             ],
