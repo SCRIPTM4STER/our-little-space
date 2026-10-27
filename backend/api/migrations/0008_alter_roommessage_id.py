@@ -2,6 +2,7 @@
 
 import uuid
 from django.db import migrations, models
+from django.db.migrations.operations.special import SeparateDatabaseAndState
 
 
 class Migration(migrations.Migration):
@@ -11,9 +12,24 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
-            model_name='roommessage',
-            name='id',
-            field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False, unique=True),
+        SeparateDatabaseAndState(
+            # PostgreSQL cannot cast bigint -> uuid directly, so we cast
+            # through text: id::text::uuid. Existing integer ids become
+            # deterministic UUIDs (e.g. 1 -> 00000000-...-0001); new rows
+            # get uuid4() from the model default.
+            database_operations=[
+                migrations.RunSQL(
+                    "ALTER TABLE api_roommessage ALTER COLUMN id DROP DEFAULT;"
+                    " ALTER TABLE api_roommessage ALTER COLUMN id TYPE uuid USING id::text::uuid;",
+                    migrations.RunSQL.noop,  # reversing a PK int->uuid change is data-lossy
+                ),
+            ],
+            state_operations=[
+                migrations.AlterField(
+                    model_name='roommessage',
+                    name='id',
+                    field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False, unique=True),
+                ),
+            ],
         ),
     ]
